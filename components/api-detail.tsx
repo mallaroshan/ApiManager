@@ -88,7 +88,7 @@ export function ApiDetail({ apiId, onBack }: ApiDetailProps) {
       <Button onClick={onBack} variant="outline">
         ← Back to List
       </Button>
-
+    
       <div className="space-y-4">
         <div className="border-b pb-4">
           <h1 className="text-3xl font-bold text-card-foreground">{api.name}</h1>

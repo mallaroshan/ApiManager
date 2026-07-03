@@ -21,6 +21,7 @@ const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'
 const AUTH_TYPES = ['None', 'API Key', 'Bearer Token', 'Basic Auth', 'OAuth2'];
 const DATA_TYPES = ['string', 'number', 'boolean', 'integer', 'array', 'object'];
 
+
 export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +36,30 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
   // Authentication
   const [authType, setAuthType] = useState('0'); // None
   const [apiKeyHeaderName, setApiKeyHeaderName] = useState('');
+  const [authentications, setAuthentications] = useState<ApiAuthenticationDto[]>([]);
+  console.log("authentications", authentications)
   const [apiKey, setApiKey] = useState('');
   const [bearerToken, setBearerToken] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState<
+    { key: string; value: string; isSecret: boolean }[]
+  >([]);
+  console.log("apiKeyHeaderName", apiKeyHeaderName)
+  const addCredential = () => {
+    const newAuth: ApiAuthenticationDto = {
+      // authenticationType: parseInt(authType),
+      apiKeyHeaderName: apiKeyHeaderName,
+      apiKey,
+      // bearerToken,
+      // username,
+      // password,
+    };
+
+    setAuthentications((current) => [...current, newAuth]);
+    setApiKeyHeaderName('');
+    setApiKey('');
+  };
 
   // Headers
   const [headers, setHeaders] = useState<ApiHeaderDto[]>([]);
@@ -139,6 +160,18 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
       headers,
       requestParameters: requestParams,
       responseParameters: responseParams,
+       credentials: authentications.map((item)=>({
+        key: item.apiKeyHeaderName || '',
+        value: item.apiKey || '',
+        isSecret: false
+       })),
+  //       credentials: [
+  //   {
+  //     "key": "",
+  //     "value": "",
+  //     "isSecret": true
+  //   }
+  // ],
     };
 
     try {
@@ -277,13 +310,53 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
         )}
 
         {authType === '2' && (
-          <input
-            type="password"
-            value={bearerToken}
-            onChange={(e) => setBearerToken(e.target.value)}
-            placeholder="Bearer Token"
-            className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                type="text"
+                placeholder="Key (e.g. client_id)"
+                className="px-3 py-2 border rounded-md"
+                value={apiKeyHeaderName}
+                onChange={(e) => setApiKeyHeaderName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Value"
+                className="px-3 py-2 border rounded-md"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <Button
+                type="button"
+                onClick={addCredential}
+                variant="secondary"
+                size="sm"
+                className="ml-auto"
+              >
+                Add Bearer
+              </Button>
+            </div>
+          </div>
+        )}
+            {authentications.length > 0 && (
+          <div className="space-y-2 pt-4 border-t border-border">
+            {authentications.map((h, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded">
+                <span className="text-sm">
+                  <span className="font-semibold">Key: {h.apiKeyHeaderName}:</span> Value:{h.apiKey }
+                </span>
+                {/* <Button
+                  type="button"
+                  onClick={() => removeHeader(idx)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                >
+                  ✕
+                </Button> */}
+              </div>
+            ))}
+          </div>
         )}
 
         {authType === '3' && (

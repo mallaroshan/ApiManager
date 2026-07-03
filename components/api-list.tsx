@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { apiClient, ExternalApiListDto } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { ExecuteApiDialog } from '@/components/execute-api-dialog';
+
 
 interface ApiListProps {
   onSelectApi: (apiId: string) => void;
@@ -28,11 +30,24 @@ const AUTH_TYPES = {
   4: 'OAuth2',
 };
 
+
 export function ApiList({ onSelectApi, onAddNew }: ApiListProps) {
   const [apis, setApis] = useState<ExternalApiListDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [executeApiId, setExecuteApiId] = useState<string | null>(null);
+// const [requestBody, setRequestBody] = useState(
+//   JSON.stringify(
+//     {
+//       parameters: {}
+//     },
+//     null,
+//     2
+//   )
+// );
+// const [response, setResponse] = useState("");
+// const [executing, setExecuting] = useState(false);
   useEffect(() => {
     const fetchApis = async () => {
       try {
@@ -104,6 +119,15 @@ export function ApiList({ onSelectApi, onAddNew }: ApiListProps) {
                   <span className="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary-foreground">
                     {AUTH_TYPES[api.authenticationType as keyof typeof AUTH_TYPES] || 'Unknown'}
                   </span>
+                  <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExecuteApiId(api.id);
+                  }}
+                >
+                  Execute
+                </Button>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
@@ -118,6 +142,12 @@ export function ApiList({ onSelectApi, onAddNew }: ApiListProps) {
           ))}
         </div>
       )}
+      <ExecuteApiDialog
+  apiId={executeApiId}
+  open={executeApiId !== null}
+  onClose={() => setExecuteApiId(null)}
+/>
     </div>
+    
   );
 }
