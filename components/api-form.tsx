@@ -187,6 +187,7 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
     if (!name || !baseUrl || !endpoint) {
       setError('Name, Base URL, and Endpoint are required');
       return;
+
     }
 
     const authentication: ApiAuthenticationDto = {
@@ -471,11 +472,13 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
                   >
                     <option value="">Select an API</option>
 
-                    {apiList.map((api) => (
-                      <option key={api.id} value={api.id}>
-                        {api.name}
-                      </option>
-                    ))}
+                    {apiList
+                      .filter((api) => api.isAuthenticationApi === true)
+                      .map((api) => (
+                        <option key={api.id} value={api.id}>
+                          {api.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </>
