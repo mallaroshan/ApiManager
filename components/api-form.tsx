@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   apiClient,
   SaveExternalApiDto,
@@ -38,6 +38,8 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
   const [apiKeyHeaderName, setApiKeyHeaderName] = useState('');
   const [authentications, setAuthentications] = useState<ApiAuthenticationDto[]>([]);
   console.log("authentications", authentications)
+  const [apiList, setApiList] = useState<any[]>([]);
+  const [selectedApiId, setSelectedApiId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [bearerToken, setBearerToken] = useState('');
   const [username, setUsername] = useState('');
@@ -46,6 +48,7 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
     { key: string; value: string; isSecret: boolean }[]
   >([]);
   console.log("apiKeyHeaderName", apiKeyHeaderName)
+
   const addCredential = () => {
     const newAuth: ApiAuthenticationDto = {
       // authenticationType: parseInt(authType),
@@ -61,6 +64,9 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
     setApiKey('');
   };
 
+  //IsAuthenticationTypeSelected
+  const [isAuthenticationApi, setIsAuthenticationApi] = useState(true);
+
   // Headers
   const [headers, setHeaders] = useState<ApiHeaderDto[]>([]);
   const [headerName, setHeaderName] = useState('');
@@ -75,6 +81,7 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
   const [paramIsRequired, setParamIsRequired] = useState(false);
 
   // Response Parameters
+  // Response Parameters
   const [responseParams, setResponseParams] = useState<ResponseParameterDto[]>([]);
   const [respParamName, setRespParamName] = useState('');
   const [respParamJsonPath, setRespParamJsonPath] = useState('');
@@ -85,7 +92,16 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
       setError('Header name and value are required');
       return;
     }
-    setHeaders([...headers, { headerName, headerValue, isSecret: isHeaderSecret }]);
+
+    setHeaders([
+      ...headers,
+      {
+        headerName,
+        headerValue,
+        isSecret: isHeaderSecret,
+      },
+    ]);
+
     setHeaderName('');
     setHeaderValue('');
     setIsHeaderSecret(false);
@@ -100,10 +116,17 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
       setError('Parameter name and JSON path are required');
       return;
     }
+
     setRequestParams([
       ...requestParams,
-      { name: paramName, jsonPath: paramJsonPath, dataType: paramDataType, isRequired: paramIsRequired },
+      {
+        name: paramName,
+        jsonPath: paramJsonPath,
+        dataType: paramDataType,
+        isRequired: paramIsRequired,
+      },
     ]);
+
     setParamName('');
     setParamJsonPath('');
     setParamDataType('string');
@@ -119,10 +142,16 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
       setError('Response parameter name and JSON path are required');
       return;
     }
+
     setResponseParams([
       ...responseParams,
-      { name: respParamName, jsonPath: respParamJsonPath, dataType: respParamDataType },
+      {
+        name: respParamName,
+        jsonPath: respParamJsonPath,
+        dataType: respParamDataType,
+      },
     ]);
+
     setRespParamName('');
     setRespParamJsonPath('');
     setRespParamDataType('string');
@@ -132,6 +161,25 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
     setResponseParams(responseParams.filter((_, i) => i !== idx));
   };
 
+  // =======================
+  // LOAD API LIST
+  // =======================
+  const loadApis = async () => {
+    try {
+      const apis = await apiClient.getAllApis();
+      setApiList(apis);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadApis();
+  }, []);
+
+  // =======================
+  // SUBMIT
+  // =======================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -160,18 +208,29 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
       headers,
       requestParameters: requestParams,
       responseParameters: responseParams,
-       credentials: authentications.map((item)=>({
-        key: item.apiKeyHeaderName || '',
-        value: item.apiKey || '',
-        isSecret: false
-       })),
-  //       credentials: [
-  //   {
-  //     "key": "",
-  //     "value": "",
-  //     "isSecret": true
-  //   }
-  // ],
+      isAuthenticationApi: isAuthenticationApi,
+
+      credentials: [
+        // Add the selected Authentication API only when this is NOT an Authentication API
+        ...(!isAuthenticationApi && selectedApiId
+          ? [
+            {
+              key: "TokenApi",
+              value: selectedApiId,
+              isSecret: false,
+            },
+          ]
+          : []),
+
+        // Add credentials only when this IS an Authentication API
+        ...(isAuthenticationApi
+          ? authentications.map((item) => ({
+            key: item.apiKeyHeaderName || "",
+            value: item.apiKey || "",
+            isSecret: false,
+          }))
+          : []),
+      ],
     };
 
     try {
@@ -310,40 +369,126 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
         )}
 
         {authType === '2' && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="text"
-                placeholder="Key (e.g. client_id)"
-                className="px-3 py-2 border rounded-md"
-                value={apiKeyHeaderName}
-                onChange={(e) => setApiKeyHeaderName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Value"
-                className="px-3 py-2 border rounded-md"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <Button
-                type="button"
-                onClick={addCredential}
-                variant="secondary"
-                size="sm"
-                className="ml-auto"
-              >
-                Add Bearer
-              </Button>
+          <div className="space-y-4">
+
+            {/* Authentication API Toggle */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Is this an Authentication API?
+              </label>
+
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    checked={isAuthenticationApi}
+                    onChange={() => setIsAuthenticationApi(true)}
+                  />
+                  <span>Yes</span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    checked={!isAuthenticationApi}
+                    onChange={() => setIsAuthenticationApi(false)}
+                  />
+                  <span>No</span>
+                </label>
+              </div>
             </div>
+
+            {/* If this API generates the token */}
+            {isAuthenticationApi ? (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Key (e.g. client_id)"
+                    className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                    value={apiKeyHeaderName}
+                    onChange={(e) => setApiKeyHeaderName(e.target.value)}
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Value"
+                    className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+
+                  <Button
+                    type="button"
+                    onClick={addCredential}
+                    variant="secondary"
+                    size="sm"
+                    className="ml-auto"
+                  >
+                    Add Credential
+                  </Button>
+                </div>
+
+                {authentications.length > 0 && (
+                  <div className="space-y-2 border rounded-md p-3">
+                    {authentications.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center border-b pb-2 last:border-b-0"
+                      >
+                        <span>
+                          <strong>{item.apiKeyHeaderName}</strong> : {item.apiKey}
+                        </span>
+
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() =>
+                            setAuthentications(prev =>
+                              prev.filter((_, i) => i !== index)
+                            )
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Select Authentication API
+                  </label>
+
+                  <select
+                    value={selectedApiId}
+                    onChange={(e) => setSelectedApiId(e.target.value)}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                  >
+                    <option value="">Select an API</option>
+
+                    {apiList.map((api) => (
+                      <option key={api.id} value={api.id}>
+                        {api.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
           </div>
         )}
-            {authentications.length > 0 && (
+        {authentications.length > 0 && (
           <div className="space-y-2 pt-4 border-t border-border">
             {authentications.map((h, idx) => (
               <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded">
                 <span className="text-sm">
-                  <span className="font-semibold">Key: {h.apiKeyHeaderName}:</span> Value:{h.apiKey }
+                  <span className="font-semibold">Key: {h.apiKeyHeaderName}:</span> Value:{h.apiKey}
                 </span>
                 {/* <Button
                   type="button"

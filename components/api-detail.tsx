@@ -88,7 +88,7 @@ export function ApiDetail({ apiId, onBack }: ApiDetailProps) {
       <Button onClick={onBack} variant="outline">
         ← Back to List
       </Button>
-    
+
       <div className="space-y-4">
         <div className="border-b pb-4">
           <h1 className="text-3xl font-bold text-card-foreground">{api.name}</h1>
@@ -100,11 +100,10 @@ export function ApiDetail({ apiId, onBack }: ApiDetailProps) {
               {AUTH_TYPES[api.authenticationType as keyof typeof AUTH_TYPES] || 'Unknown'}
             </span>
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                api.isActive
-                  ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                  : 'bg-gray-400/10 text-gray-700 dark:text-gray-400'
-              }`}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${api.isActive
+                ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                : 'bg-gray-400/10 text-gray-700 dark:text-gray-400'
+                }`}
             >
               {api.isActive ? 'Active' : 'Inactive'}
             </span>
@@ -137,6 +136,19 @@ export function ApiDetail({ apiId, onBack }: ApiDetailProps) {
               <div>
                 <p className="text-muted-foreground">Timeout (seconds)</p>
                 <p className="font-mono bg-muted p-2 rounded">{api.timeoutInSeconds}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">Authentication Type</p>
+                <p className="font-mono bg-muted p-3 rounded-md">
+                  {api.apiAuthentication.apiKeyHeaderName || api.apiAuthentication.bearerToken ? 'API Key' : 'Bearer Token'}
+                </p>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-muted-foreground mb-1">Is Authentication API</p>
+                <p className="font-mono bg-muted p-3 rounded-md">
+                  {api.IsAuthenticationApi ? "Yes" : "No"}
+                </p>
               </div>
             </div>
           </div>

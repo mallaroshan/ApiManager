@@ -40,6 +40,7 @@ export interface SaveExternalApiDto {
   endpoint: string;
   method: number; // HttpMethodType
   isEmptyBody: boolean;
+  isAuthenticationApi: boolean;
   apiAuthentication: ApiAuthenticationDto;
   headers: ApiHeaderDto[];
   requestParameters: RequestParameterDto[];
