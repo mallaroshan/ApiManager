@@ -430,7 +430,7 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
         {/* Authentication Type (API Key) */}
         {authType === '2' && (
           <div className="border rounded-lg p-4 space-y-4">
-            <h3 className="text-lg font-semibold">API Key Authentication</h3>
+            <h3 className="text-lg font-semibold">Add Credentials</h3>
 
             <div className="grid grid-cols-3 gap-2">
               <input
