@@ -331,6 +331,64 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
         </div>
       </fieldset>
 
+      <fieldset className="rounded-lg border border-border bg-card p-4 space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Authentication API</h3>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Is this an Authentication API?
+            </label>
+
+            <div className="flex items-center gap-6 pb-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={isAuthenticationApi}
+                  onChange={() => setIsAuthenticationApi(true)}
+                />
+                <span>Yes</span>
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={!isAuthenticationApi}
+                  onChange={() => setIsAuthenticationApi(false)}
+                />
+                <span>No</span>
+              </label>
+            </div>
+          </div>
+
+          {!isAuthenticationApi && (
+            <div>
+              <select
+                value={selectedApiId}
+                onChange={(e) => setSelectedApiId(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+              >
+                <option value="">Select an API</option>
+
+                {apiList
+                  .filter((api) => api.isAuthenticationApi)
+                  .map((api) => (
+                    <option key={api.id} value={api.id}>
+                      {api.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          {isAuthenticationApi && (
+            <div className="rounded-md bg-muted p-3 text-sm">
+              This API will be used to generate authentication tokens.
+            </div>
+          )}
+        </div>
+      </fieldset>
+
       {/* Authentication */}
       <fieldset className="rounded-lg border border-border bg-card p-4 space-y-4">
         <legend className="text-lg font-semibold px-2">Authentication</legend>
@@ -369,123 +427,69 @@ export function ApiForm({ onSuccess, onCancel }: ApiFormProps) {
           </div>
         )}
 
+        {/* Authentication Type (API Key) */}
         {authType === '2' && (
-          <div className="space-y-4">
+          <div className="border rounded-lg p-4 space-y-4">
+            <h3 className="text-lg font-semibold">API Key Authentication</h3>
 
-            {/* Authentication API Toggle */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Is this an Authentication API?
-              </label>
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                type="text"
+                placeholder="Key (e.g. client_id)"
+                className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                value={apiKeyHeaderName}
+                onChange={(e) => setApiKeyHeaderName(e.target.value)}
+              />
 
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={isAuthenticationApi}
-                    onChange={() => setIsAuthenticationApi(true)}
-                  />
-                  <span>Yes</span>
-                </label>
+              <input
+                type="text"
+                placeholder="Value"
+                className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
 
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={!isAuthenticationApi}
-                    onChange={() => setIsAuthenticationApi(false)}
-                  />
-                  <span>No</span>
-                </label>
-              </div>
+              <Button
+                type="button"
+                onClick={addCredential}
+                variant="secondary"
+                size="sm"
+              >
+                Add Credential
+              </Button>
             </div>
 
-            {/* If this API generates the token */}
-            {isAuthenticationApi ? (
-              <>
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Key (e.g. client_id)"
-                    className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
-                    value={apiKeyHeaderName}
-                    onChange={(e) => setApiKeyHeaderName(e.target.value)}
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Value"
-                    className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                  />
-
-                  <Button
-                    type="button"
-                    onClick={addCredential}
-                    variant="secondary"
-                    size="sm"
-                    className="ml-auto"
+            {authentications.length > 0 && (
+              <div className="space-y-2 border rounded-md p-3">
+                {authentications.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center border-b pb-2 last:border-b-0"
                   >
-                    Add Credential
-                  </Button>
-                </div>
+                    <span>
+                      <strong>{item.apiKeyHeaderName}</strong> : {item.apiKey}
+                    </span>
 
-                {authentications.length > 0 && (
-                  <div className="space-y-2 border rounded-md p-3">
-                    {authentications.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center border-b pb-2 last:border-b-0"
-                      >
-                        <span>
-                          <strong>{item.apiKeyHeaderName}</strong> : {item.apiKey}
-                        </span>
-
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() =>
-                            setAuthentications(prev =>
-                              prev.filter((_, i) => i !== index)
-                            )
-                          }
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() =>
+                        setAuthentications((prev) =>
+                          prev.filter((_, i) => i !== index)
+                        )
+                      }
+                    >
+                      Remove
+                    </Button>
                   </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Select Authentication API
-                  </label>
-
-                  <select
-                    value={selectedApiId}
-                    onChange={(e) => setSelectedApiId(e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
-                  >
-                    <option value="">Select an API</option>
-
-                    {apiList
-                      .filter((api) => api.isAuthenticationApi === true)
-                      .map((api) => (
-                        <option key={api.id} value={api.id}>
-                          {api.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              </>
+                ))}
+              </div>
             )}
-
           </div>
         )}
+
+
         {authentications.length > 0 && (
           <div className="space-y-2 pt-4 border-t border-border">
             {authentications.map((h, idx) => (
