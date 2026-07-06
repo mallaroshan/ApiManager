@@ -11,13 +11,13 @@ interface ApiDetailProps {
 }
 
 const HTTP_METHODS = {
-  0: 'GET',
-  1: 'POST',
-  2: 'PUT',
-  3: 'DELETE',
-  4: 'PATCH',
-  5: 'HEAD',
-  6: 'OPTIONS',
+  1: 'GET',
+  2: 'POST',
+  3: 'PUT',
+  4: 'DELETE',
+  5: 'PATCH',
+  6: 'HEAD',
+  7: 'OPTIONS',
 };
 
 const AUTH_TYPES = {
